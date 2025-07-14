@@ -9,7 +9,7 @@ public class RequestStringGenerator {
     public static String generateRequestString(String requestUrl, String userId, String version, String token,String paramsPart3 ) {
         // 生成时间戳
         long ts = System.currentTimeMillis();
-        
+//        String ts ="1752240841802";
         // 生成随机androidId
        String androidId = generateRandomAndroidId();
         

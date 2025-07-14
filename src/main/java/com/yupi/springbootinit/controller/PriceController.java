@@ -19,9 +19,8 @@ public class PriceController {
     /**
      * 获取所有物品价格
      */
-    @GetMapping
+    @PostMapping
     public List<MarketVo> getAllPrices() {
-        priceService.getBase();
         return priceService.getAllPrices();
     }
 

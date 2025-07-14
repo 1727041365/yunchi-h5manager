@@ -16,14 +16,14 @@ import java.util.TreeMap;
 public class ApiClient {
 
     private final RestTemplate restTemplate;
-    private static final String TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIiLCJhdWQiOiIiLCJqdGkiOiIxMjQwNzMyOCIsImlhdCI6MTc1MDE2OTQyMSwibmJmIjoxNzUwMTY5NDIxLCJleHAiOjE3NTI3NjE0MjEsInR5cGUiOiJ2MTFhcHAiLCJhdXRoZW50aWNhdGlvblN0YXRlIjpmYWxzZX0.idOGf_vV2TnqGSlq28I_MchAeZ7iVDkVyAMwwH98Rj4";
+    private static final String TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIiLCJhdWQiOiIiLCJqdGkiOiIxMjQyMjQ1NyIsImlhdCI6MTc1MjExNTU1MCwibmJmIjoxNzUyMTE1NTUwLCJleHAiOjE3NTM5NTI5MjMsInR5cGUiOiIyMDk3NV92MTFhcHAiLCJhdXRoZW50aWNhdGlvblN0YXRlIjpmYWxzZX0.aVoPWd1th4W27pG1dFcugvFLngZ8zEkyRoy9JldZ-1I";
     private static final String ANDROID_ID = "12432b87b3b19b25";
     private static final String CHANNEL = "official";
     private static final String PACKAGE_ID = "com.caike.union";
     private static final String User_Agent= "com.caike.union/5.2.2-official Dalvik/2.1.0 (Linux; U; Android 9; SM-N9760 Build/PQ3B.190801.11071530";
     private static final String Host= "fks-api.lucklyworld.com";
     private static final String VERSION= "5.2.2";
-    private static final String USER_ID= "5123892";
+    private static final String USER_ID= "12422457";
     public ApiClient(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
