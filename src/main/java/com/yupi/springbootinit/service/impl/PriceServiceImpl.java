@@ -1,12 +1,11 @@
 package com.yupi.springbootinit.service.impl;
 
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yupi.springbootinit.client.ApiClient;
 import com.yupi.springbootinit.mapper.MarketMapper;
 import com.yupi.springbootinit.model.entity.Market;
+import com.yupi.springbootinit.model.enums.MarketConfigEnum;
 import com.yupi.springbootinit.model.mq.MarketMessage;
 import com.yupi.springbootinit.model.vo.MarketVo;
 import com.yupi.springbootinit.service.PriceService;
@@ -16,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,9 +36,10 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
     private String routingKey;
 
     private final ApiClient apiClient;
-    private static final String UID = "12422457"; // 固定用户ID
-    private static final String TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIiLCJhdWQiOiIiLCJqdGkiOiIxMjQyMjQ1NyIsImlhdCI6MTc1MjExNTU1MCwibmJmIjoxNzUyMTE1NTUwLCJleHAiOjE3NTM5NTI5MjMsInR5cGUiOiIyMDk3NV92MTFhcHAiLCJhdXRoZW50aWNhdGlvblN0YXRlIjpmYWxzZX0.aVoPWd1th4W27pG1dFcugvFLngZ8zEkyRoy9JldZ-1I";
-    private static final String KEY = "BHbE9oCgl58NUz5oJVDUFMLJO9vGQnvdv0Lem3315wQG8laB4dGcxIXFLfDsInHTa";
+    private static final String Host = "fks-api.lucklyworld.com";
+    private static final String SuperHost = "super-link-api.lucklyworld.com";
+    private static final String NimbusStoneHost = "farm-api.lucklyworld.com";
+    private static final String PenguinsHost = "android-api.lucklyworld.com";
 
     public PriceServiceImpl(ApiClient apiClient) {
         this.apiClient = apiClient;
@@ -49,7 +48,7 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<MarketVo> getAllPrices() {
-        List<Market> marketList= this.list();
+        List<Market> marketList = this.list();
         List<MarketVo> marketVoList = marketList.stream().map(market -> {
             MarketVo marketVo = new MarketVo();
             BeanUtils.copyProperties(market, marketVo);
@@ -58,62 +57,85 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         return marketVoList;
     }
 
-
-    //    // 1. 超级币
-//    private PriceResponse getSuperCoinPrice() {
-//        String url = "https://super-link-api.lucklyworld.com/v9/api/trade/purchase/list";
-//        // URL参数（uid、version）
-//        Map<String, String> urlParams = new HashMap<>();
-//        urlParams.put("uid", UID);
-//        urlParams.put("version", "4.1.2"); // 注意版本号
-//        // 表单参数
-//        Map<String, String> formParams = new HashMap<>();
-//        formParams.put("page", "1");
-//        formParams.put("queryCode", "");
-//        // 调用API
-//        Map<String, Object> response = apiClient.postFormWithSign(
-//                url, urlParams, formParams,result,Map.class
-//        );
-//        // 解析响应（list[1].price，单位宝石）
-//        PriceResponse priceResponse = new PriceResponse();
-//        priceResponse.setItemName("超级币");
-//        priceResponse.setPrice((Double) response.get("list[1].price"));
-//        priceResponse.setCurrency("GEM");
-//        priceResponse.setApiSource("super-link-api.lucklyworld.com");
-//        return  priceResponse;
-//    }
-    // 1. 基石
+    // 1. 超级币
     @Override
-//  @Scheduled(cron = "0 0/30 * * * ?")
-    @Scheduled(cron = "0 0/10 * * * ?")
-    public void getBase() {
-        System.out.println("当前线程: " + Thread.currentThread().getName());
-        String requestUrl = "/v11/api/foundation/trade/sale/list";
-        String url = "https://fks-api.lucklyworld.com/v11/api/foundation/trade/sale/list";
-        String paramsPart3 = "page=1";//入参
+    public void getSuperCurrency() {
+        String requestUrl = "/v9/api/trade/purchase/list";
+        String url = "https://super-link-api.lucklyworld.com/v9/api/trade/purchase/list";
+        String paramsPart3 = "page=1&queryCode= ";//入参
+        String version = "4.1.2";
         RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
-        String code = requestStringGenerator.generateRequestString(requestUrl, UID, "5.2.2", TOKEN, paramsPart3);
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
         String[] split = code.split(",");
         String word = split[0];
         String ts = split[1];
         System.out.println("word" + word);
         HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
-        String result = hmacSha256Utils.hmacSha256Encrypt(word, KEY);
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
         Map<String, String> urlParams = new HashMap<>();
-        urlParams.put("uid", UID);
-        urlParams.put("version", "5.2.2");
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
         // 表单参数
-        Map<String, String> formParams = new HashMap<>();
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        formParams.put("queryCode", "");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, SuperHost, Map.class
+        );
+        log.info("date:" + response);
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        Map<String, Object> item = list.get(1);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+        } else if (priceObj instanceof String) {
+            // 如果日志中显示的是字符串形式，需要转换
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+
+        }
+        market.setItemName("超级币");
+        market.setCurrency("宝石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+
+    // 1. 基石
+    @Override
+//    @Scheduled(cron = "0 0/10 * * * ?")
+    public void getBase() {
+        String requestUrl = "/v11/api/foundation/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/foundation/trade/sale/list";
+        String paramsPart3 = "page=1";//入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
         formParams.put("page", "1");
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
-                url, urlParams, formParams, result, ts, Map.class
+                url, urlParams, formParams, result, ts, version, Host, Map.class
         );
+        log.info("date:" + response);
         // 解析响应（list[1].price，单位宝石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-//        log.info("list"+list.toString());
-        Map<String,Object> item = list.get(1);
-        Object priceObj= item.get("price");
-//        log.info("priceObj"+priceObj);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
         // 根据实际类型转换
         Market market = new Market();
         if (priceObj instanceof Double) {
@@ -130,12 +152,986 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
 
         }
         market.setItemName("基石");
-        market.setCurrency("GEM");
+        market.setCurrency("矿石");
         MarketVo marketVo = new MarketVo();
         BeanUtils.copyProperties(market, marketVo);
         sendMarketMessage(market);
     }
 
+    // 3. 贝壳
+    @Override
+    public void getSeashell() {
+        String requestUrl = "/v6/api/pets/shells/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v6/api/pets/shells/trade/sale/list";
+        String paramsPart3 = "page=1";//入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[1].price，单位宝石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            // 如果日志中显示的是字符串形式，需要转换
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+
+        }
+        market.setItemName("贝壳");
+        market.setCurrency("宝石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+
+    // 4. 胖胖鹅
+    @Override
+    public void getPenguins() {
+        String requestUrl = "v13/api/penguins/trade/sale/list";
+        String url = "https://android-api.lucklyworld.com/v13/api/penguins/trade/sale/list";
+        String paramsPart3 = "page=0&column=rarity&direction=asc";//入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "0");
+        formParams.put("column", "rarity");
+        formParams.put("direction", "asc");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, PenguinsHost, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[1].price，单位宝石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            // 如果日志中显示的是字符串形式，需要转换
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+
+        }
+        market.setItemName("胖胖鹅");
+        market.setCurrency("宝石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+
+    // 5. 龟蛋
+    @Override
+    public void getTurtleEggs() {
+        String requestUrl = "/v6/api/pets/market/index";
+        String url = "https://fks-api.lucklyworld.com/v6/api/pets/market/index";
+        String paramsPart3 = "species=0&column=price&direction=asc&page=1";//入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("species", "0");
+        formParams.put("column", "price");
+        formParams.put("direction", "asc");
+        formParams.put("page", "1");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[1].price，单位宝石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            // 如果日志中显示的是字符串形式，需要转换
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+
+        }
+        market.setItemName("龟蛋");
+        market.setCurrency("宝石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+
+    // 6. 龟仔
+    @Override
+    public void getTurtleBoys() {
+        String requestUrl = "/v6/api/pets/market/index";
+        String url = "https://fks-api.lucklyworld.com/v6/api/pets/market/index";
+        String paramsPart3 = "species=1&column=price&direction=asc&page=1";//入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("species", "1");
+        formParams.put("column", "price");
+        formParams.put("direction", "asc");
+        formParams.put("page", "1");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[1].price，单位宝石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            // 如果日志中显示的是字符串形式，需要转换
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+
+        }
+        market.setItemName("龟仔");
+        market.setCurrency("宝石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+
+    // 7. 护甲
+    @Override
+    public void getArmor() {
+        String requestUrl = "/v11/api/world/armor/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/world/armor/trade/sale/list";
+        String paramsPart3 = "page=1";//入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[1].price，单位宝石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            // 如果日志中显示的是字符串形式，需要转换
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+
+        }
+        market.setItemName("护甲");
+        market.setCurrency("宝石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+
+    //8.汉字
+    @Override
+    public void getChineseCharacter() {
+        String requestUrl = "/v11/api/word/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/word/trade/sale/list";
+        String paramsPart3 = "page=1";// 入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位宝石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("汉字");
+        market.setCurrency("宝石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+
+    //9.钢材
+    @Override
+    public void getSteel() {
+        String requestUrl = "/v11/api/sw/trade/props/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/sw/trade/props/sale/list";
+        String paramsPart3 = "propsId=1&page=1";// 入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("propsId", "1");
+        formParams.put("page", "1");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位宝石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("钢材");
+        market.setCurrency("宝石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+
+    //10.风车
+    @Override
+    public void getWindmill() {
+        String requestUrl = "/v11/api/fks/turbine/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/fks/turbine/trade/sale/list";
+        String paramsPart3 = "page=1";// 入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位宝石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("风车");
+        market.setCurrency("宝石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+
+    //11.沙砾
+    @Override
+    public void getGravel() {
+        String requestUrl = "/v11/api/sand/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/sand/trade/sale/list";
+        String paramsPart3 = "page=1";// 入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位宝石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("沙砾");
+        market.setCurrency("宝石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+//12. 时间积分
+@Override
+public void getTimePoints() {
+        String requestUrl = "/v11/api/mr/time/points/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/mr/time/points/trade/sale/list";
+        String paramsPart3 = "page=1";// 入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位宝石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("时间积分");
+        market.setCurrency("宝石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+
+    //13. 散仙
+    @Override
+    public void getLooseFairy() {
+        String requestUrl = "/v11/api/jinnee/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/jinnee/trade/sale/list";
+        String paramsPart3 = "page=1&orderByField=3&orderBy=2&level=1";// 入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        formParams.put("orderByField", "3");
+        formParams.put("orderBy", "2");
+        formParams.put("level", "1");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位矿石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("散仙");
+        market.setCurrency("矿石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+
+    //14. 地仙
+    @Override
+    public void getEarthFairy() {
+        String requestUrl = "/v11/api/jinnee/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/jinnee/trade/sale/list";
+        String paramsPart3 = "page=1&orderByField=3&orderBy=2&level=2";// 入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        formParams.put("orderByField", "3");
+        formParams.put("orderBy", "2");
+        formParams.put("level", "2");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位矿石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("地仙");
+        market.setCurrency("矿石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+    //15.真仙
+    @Override
+    public void getTrueFairy() {
+        String requestUrl = "/v11/api/jinnee/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/jinnee/trade/sale/list";
+        String paramsPart3 = "page=1&orderByField=3&orderBy=2&level=3";// 入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        formParams.put("orderByField", "3");
+        formParams.put("orderBy", "2");
+        formParams.put("level", "3");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位矿石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("真仙");
+        market.setCurrency("矿石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+    //16.天仙
+    @Override
+    public void getHeavenlyFairy() {
+        String requestUrl = "/v11/api/jinnee/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/jinnee/trade/sale/list";
+        String paramsPart3 = "page=1&orderByField=3&orderBy=2&level=4";// 入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        formParams.put("orderByField", "3");
+        formParams.put("orderBy", "2");
+        formParams.put("level", "4");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位矿石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("天仙");
+        market.setCurrency("矿石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+    //17，金仙
+    @Override
+    public void getGoldenFairy() {
+        String requestUrl = "/v11/api/jinnee/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/jinnee/trade/sale/list";
+        String paramsPart3 = "page=1&orderByField=3&orderBy=2&level=5";// 入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        formParams.put("orderByField", "3");
+        formParams.put("orderBy", "2");
+        formParams.put("level", "5");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位矿石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("金仙");
+        market.setCurrency("矿石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+    //18.法力
+    @Override
+    public void getMagicPower() {
+        String requestUrl = "/v11/api/fks/energy/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/fks/energy/trade/sale/list";
+        String paramsPart3 = "page=1";// 入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位矿石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("法力");
+        market.setCurrency("矿石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+    //19.骷髅头
+    @Override
+    public void getSkull() {
+        String requestUrl = "/v11/api/fks/skull/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/fks/skull/trade/sale/list";
+        String paramsPart3 = "page=1";// 入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位矿石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("骷髅头");
+        market.setCurrency("矿石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+    //20.金石
+    @Override
+    public void getGoldStone() {
+        String requestUrl = "/v11/api/fks/skull/trade/sale/list";
+        String url = "https://fks-api.lucklyworld.com/v11/api/fks/skull/trade/sale/list";
+        String paramsPart3 = "page=1&productType=2";// 入参
+        String version = "5.2.2";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("page", "1");
+        formParams.put("productType", "2");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, Host, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位矿石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("金石");
+        market.setCurrency("矿石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
+    //20.灵石
+    @Override
+    public void getNimbusStone() {
+        String requestUrl = "/v8/api/farm/stone/sell/order";
+        String url = "https://farm-api.lucklyworld.com/v8/api/farm/stone/sell/order";
+        String paramsPart3 = "next=0";// 入参
+        String version = "2.1.0";
+        RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
+        String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
+        String[] split = code.split(",");
+        String word = split[0];
+        String ts = split[1];
+        System.out.println("word" + word);
+        HmacSha256Utils hmacSha256Utils = new HmacSha256Utils();
+        String result = hmacSha256Utils.hmacSha256Encrypt(word, MarketConfigEnum.KEY.getValue());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("uid", MarketConfigEnum.UID.getValue());
+        urlParams.put("version", version);
+        // 表单参数
+        Map<String, String> formParams = new LinkedHashMap<>();
+        formParams.put("next", "0");
+        Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
+                url, urlParams, formParams, result, ts, version, NimbusStoneHost, Map.class
+        );
+        log.info("date:" + response);
+        // 解析响应（list[0].price，单位矿石）
+        List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("items");
+        log.info("price:" + list);
+        Map<String, Object> item = list.get(0);
+        Object priceObj = item.get("price");
+        // 根据实际类型转换
+        Market market = new Market();
+        if (priceObj instanceof Double) {
+            Double price = (Double) priceObj;
+            market.setPrice(price);
+            System.out.println("Price: " + price);
+        } else if (priceObj instanceof String) {
+            Double price = Double.parseDouble((String) priceObj);
+            market.setPrice(price);
+            System.out.println("Price (parsed): " + price);
+        } else {
+            System.out.println("Price type: " + priceObj.getClass().getName());
+        }
+        market.setItemName("灵石");
+        market.setCurrency("宝石");
+        MarketVo marketVo = new MarketVo();
+        BeanUtils.copyProperties(market, marketVo);
+        sendMarketMessage(market);
+    }
     /**
      * 消息发送
      *
@@ -152,6 +1148,7 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         log.info("Sent market data to queue: {}", marketMessage);
     }
 
+
     @Override
     public MarketVo getPriceByItemName(String itemName) {
         return getAllPrices().stream()
@@ -159,7 +1156,6 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
                 .findFirst()
                 .orElse(null);
     }
-
 
 
 }

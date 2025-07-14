@@ -1,5 +1,7 @@
 package com.yupi.springbootinit.client;
 
+import com.yupi.springbootinit.model.enums.MarketConfigEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.parser.Host;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -12,18 +14,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+@Slf4j
 @Component
 public class ApiClient {
 
     private final RestTemplate restTemplate;
-    private static final String TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIiLCJhdWQiOiIiLCJqdGkiOiIxMjQyMjQ1NyIsImlhdCI6MTc1MjExNTU1MCwibmJmIjoxNzUyMTE1NTUwLCJleHAiOjE3NTM5NTI5MjMsInR5cGUiOiIyMDk3NV92MTFhcHAiLCJhdXRoZW50aWNhdGlvblN0YXRlIjpmYWxzZX0.aVoPWd1th4W27pG1dFcugvFLngZ8zEkyRoy9JldZ-1I";
-    private static final String ANDROID_ID = "12432b87b3b19b25";
+//    private static final String TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIiLCJhdWQiOiIiLCJqdGkiOiIxMjQyMjQ1NyIsImlhdCI6MTc1MjExNTU1MCwibmJmIjoxNzUyMTE1NTUwLCJleHAiOjE3NTM5NTI5MjMsInR5cGUiOiIyMDk3NV92MTFhcHAiLCJhdXRoZW50aWNhdGlvblN0YXRlIjpmYWxzZX0.aVoPWd1th4W27pG1dFcugvFLngZ8zEkyRoy9JldZ-1I";
+//    private static final String ANDROID_ID = "12432b87b3b19b25";
     private static final String CHANNEL = "official";
     private static final String PACKAGE_ID = "com.caike.union";
     private static final String User_Agent= "com.caike.union/5.2.2-official Dalvik/2.1.0 (Linux; U; Android 9; SM-N9760 Build/PQ3B.190801.11071530";
-    private static final String Host= "fks-api.lucklyworld.com";
-    private static final String VERSION= "5.2.2";
-    private static final String USER_ID= "12422457";
+//    private static final String USER_ID= "12422457  5.2.2";
     public ApiClient(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
@@ -37,26 +38,28 @@ public class ApiClient {
             Map<String, String> formParams, // 表单请求体参数
             String SingResult,
             String ts,
+            String version,
+            String Host,
             Class<T> responseType
     ) {
         // 1. 构建完整URL（拼接URL参数）
         String fullUrl = buildUrlWithParams(url, urlParams);
         System.out.println("fullUrl:"+fullUrl);
-//        formParams.put("sign", SingResult);
         // 5. 构建请求体（表单格式）
         MultiValueMap<String, String> formData = convertToFormData(formParams);
+        log.info("表单数据formData:"+formData);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED); // 改成表单格式
         headers.set("Host", Host);
         headers.set("User-Agent", User_Agent);
-        headers.set("androidId", ANDROID_ID);
+        headers.set("androidId", MarketConfigEnum.ANDROID_ID.getValue());
         headers.set("channel", CHANNEL);
         headers.set("packageId", PACKAGE_ID);
         headers.set("sign", SingResult); // 此处需填写实际签名值
-        headers.set("token",TOKEN); // 此处需填写实际 token
+        headers.set("token", MarketConfigEnum.TOKEN.getValue()); // 此处需填写实际 token
         headers.set("ts",ts);
-        headers.set("userId", USER_ID); // 此处需填写实际用户 ID
-        headers.set("version", VERSION);
+        headers.set("userId", MarketConfigEnum.UID.getValue()); // 此处需填写实际用户 ID
+        headers.set("version", version);
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(formData, headers);
         System.out.println(entity);
        // 6. 发送请求并返回结果

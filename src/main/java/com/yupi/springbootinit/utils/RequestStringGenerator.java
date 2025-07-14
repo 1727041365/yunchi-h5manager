@@ -1,5 +1,7 @@
 package com.yupi.springbootinit.utils;
 
+import com.yupi.springbootinit.model.enums.MarketConfigEnum;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
@@ -15,7 +17,7 @@ public class RequestStringGenerator {
         
         // 构建参数部分
         String paramsPart1 = "uid=" + userId + "&version=" + version;
-        String paramsPart2 = "androidId=12432b87b3b19b25"+
+        String paramsPart2 = "androidId="+ MarketConfigEnum.ANDROID_ID.getValue() +
                            "&userId=" + userId + 
                            "&token=" + token + 
                            "&packageId=com.caike.union" + 
