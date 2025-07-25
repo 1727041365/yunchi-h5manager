@@ -7,6 +7,5 @@ import com.yupi.springbootinit.model.entity.Hot;
 import com.yupi.springbootinit.model.entity.PostFavour;
 import org.springframework.stereotype.Service;
 
-@Service
     public interface HotService extends IService<Hot> {
 }

@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,7 +64,7 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
     public void getSuperCurrency() {
         String requestUrl = "/v9/api/trade/purchase/list";
         String url = "https://super-link-api.lucklyworld.com/v9/api/trade/purchase/list";
-        String paramsPart3 = "page=1&queryCode= ";//入参
+        String paramsPart3 = "page=1&queryCode=";//入参
         String version = "4.1.2";
         RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
         String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
@@ -82,7 +84,6 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, SuperHost, Map.class
         );
-        log.info("date:" + response);
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
         Map<String, Object> item = list.get(1);
         Object priceObj = item.get("price");
@@ -106,9 +107,8 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         sendMarketMessage(market);
     }
 
-    // 1. 基石
+    // 2. 基石
     @Override
-//    @Scheduled(cron = "0 0/10 * * * ?")
     public void getBase() {
         String requestUrl = "/v11/api/foundation/trade/sale/list";
         String url = "https://fks-api.lucklyworld.com/v11/api/foundation/trade/sale/list";
@@ -131,7 +131,6 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[1].price，单位宝石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
         Map<String, Object> item = list.get(0);
@@ -182,7 +181,6 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[1].price，单位宝石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
         Map<String, Object> item = list.get(0);
@@ -235,7 +233,6 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, PenguinsHost, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[1].price，单位宝石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
         Map<String, Object> item = list.get(0);
@@ -289,10 +286,9 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[1].price，单位宝石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -344,10 +340,9 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[1].price，单位宝石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -396,10 +391,10 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
+
         // 解析响应（list[1].price，单位宝石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -448,10 +443,10 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
+
         // 解析响应（list[0].price，单位宝石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -499,10 +494,10 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
+
         // 解析响应（list[0].price，单位宝石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -527,6 +522,7 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
 
     //10.风车
     @Override
+
     public void getWindmill() {
         String requestUrl = "/v11/api/fks/turbine/trade/sale/list";
         String url = "https://fks-api.lucklyworld.com/v11/api/fks/turbine/trade/sale/list";
@@ -549,10 +545,10 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
+
         // 解析响应（list[0].price，单位宝石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -599,10 +595,10 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
+
         // 解析响应（list[0].price，单位宝石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -624,9 +620,10 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
         BeanUtils.copyProperties(market, marketVo);
         sendMarketMessage(market);
     }
-//12. 时间积分
-@Override
-public void getTimePoints() {
+
+    //12. 时间积分
+    @Override
+    public void getTimePoints() {
         String requestUrl = "/v11/api/mr/time/points/trade/sale/list";
         String url = "https://fks-api.lucklyworld.com/v11/api/mr/time/points/trade/sale/list";
         String paramsPart3 = "page=1";// 入参
@@ -648,10 +645,9 @@ public void getTimePoints() {
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[0].price，单位宝石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -701,10 +697,9 @@ public void getTimePoints() {
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[0].price，单位矿石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -754,10 +749,9 @@ public void getTimePoints() {
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[0].price，单位矿石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -779,6 +773,7 @@ public void getTimePoints() {
         BeanUtils.copyProperties(market, marketVo);
         sendMarketMessage(market);
     }
+
     //15.真仙
     @Override
     public void getTrueFairy() {
@@ -806,10 +801,9 @@ public void getTimePoints() {
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[0].price，单位矿石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -831,6 +825,7 @@ public void getTimePoints() {
         BeanUtils.copyProperties(market, marketVo);
         sendMarketMessage(market);
     }
+
     //16.天仙
     @Override
     public void getHeavenlyFairy() {
@@ -858,10 +853,9 @@ public void getTimePoints() {
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[0].price，单位矿石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -883,6 +877,7 @@ public void getTimePoints() {
         BeanUtils.copyProperties(market, marketVo);
         sendMarketMessage(market);
     }
+
     //17，金仙
     @Override
     public void getGoldenFairy() {
@@ -910,10 +905,9 @@ public void getTimePoints() {
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[0].price，单位矿石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -935,6 +929,7 @@ public void getTimePoints() {
         BeanUtils.copyProperties(market, marketVo);
         sendMarketMessage(market);
     }
+
     //18.法力
     @Override
     public void getMagicPower() {
@@ -959,10 +954,9 @@ public void getTimePoints() {
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[0].price，单位矿石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -984,6 +978,7 @@ public void getTimePoints() {
         BeanUtils.copyProperties(market, marketVo);
         sendMarketMessage(market);
     }
+
     //19.骷髅头
     @Override
     public void getSkull() {
@@ -1008,10 +1003,9 @@ public void getTimePoints() {
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[0].price，单位矿石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -1033,6 +1027,7 @@ public void getTimePoints() {
         BeanUtils.copyProperties(market, marketVo);
         sendMarketMessage(market);
     }
+
     //20.金石
     @Override
     public void getGoldStone() {
@@ -1058,10 +1053,9 @@ public void getTimePoints() {
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, Host, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[0].price，单位矿石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("list");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -1083,7 +1077,8 @@ public void getTimePoints() {
         BeanUtils.copyProperties(market, marketVo);
         sendMarketMessage(market);
     }
-    //20.灵石
+
+    //21.灵石
     @Override
     public void getNimbusStone() {
         String requestUrl = "/v8/api/farm/stone/sell/order";
@@ -1107,10 +1102,9 @@ public void getTimePoints() {
         Map<String, List<Map<String, Object>>> response = apiClient.postFormWithSign(
                 url, urlParams, formParams, result, ts, version, NimbusStoneHost, Map.class
         );
-        log.info("date:" + response);
         // 解析响应（list[0].price，单位矿石）
         List<Map<String, Object>> list = (List<Map<String, Object>>) response.get("items");
-        log.info("price:" + list);
+        //log.info("price:" + list);
         Map<String, Object> item = list.get(0);
         Object priceObj = item.get("price");
         // 根据实际类型转换
@@ -1132,6 +1126,73 @@ public void getTimePoints() {
         BeanUtils.copyProperties(market, marketVo);
         sendMarketMessage(market);
     }
+
+    @Override
+    public void autoUpdateDate() {
+        Random random = new Random();
+        int sleepTime = 800 + random.nextInt(200);
+        this.getLooseFairy();//13散仙no
+//        this.getSuperCurrency();//1更新超级币no
+        this.getBase();//2更新基石yes
+        this.getSeashell();//3更新贝壳yes
+        this.getPenguins();//4更新胖胖鹅yes
+        this.getTurtleEggs();//5更新龟蛋yes
+        this.getTurtleBoys();//6更新龟仔yes
+        this.getArmor();//7更新护甲yes
+        this.getChineseCharacter();//8y
+        this.getEarthFairy();//14地仙yes
+        this.getSteel();//9y
+        this.getWindmill();//10y
+        this.getGravel();//11y
+        this.getTimePoints();//12y
+        try {
+            this.getSkull();//19骷髅头yes
+            Thread.sleep(sleepTime + random.nextInt(1000)); // 睡眠，反爬虫
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            // 当线程在睡眠时被中断，会抛出此异常
+        }
+        sleepTime = 1000 + random.nextInt(200);
+        try {
+            this.getTrueFairy();//15真仙yes
+            Thread.sleep(sleepTime); // 线程暂停 1000毫秒（即 1 秒）
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            // 当线程在睡眠时被中断，会抛出此异常
+        }
+        this.getHeavenlyFairy();//16天仙no
+        this.getMagicPower();//18法力yes
+        this.getGoldStone();//20金石yes
+        sleepTime = 1000 + random.nextInt(170);
+        try {
+            this.getNimbusStone();//21灵石yes
+            Thread.sleep(sleepTime); // 线程暂停 1000毫秒（即 1 秒）
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            // 当线程在睡眠时被中断，会抛出此异常
+        }
+    }
+
+    @Scheduled(cron = "0 0/10 * * * ?")
+    @Async
+    void dojinxian() {
+        try {
+            Thread.sleep(1000); // 线程暂停 1000毫秒（即 1 秒）
+            this.getGoldenFairy();//17金仙yes
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            // 当线程在睡眠时被中断，会抛出此异常
+        }
+    }
+
+    @Override
+    @Scheduled(cron = "0 0/12 * * * ?")
+    public void ScheduledUpdateDate() {
+        log.info("定时任务开始执行..."); // 添加日志
+        autoUpdateDate();
+        log.info("定时任务执行完成！");
+    }
+
     /**
      * 消息发送
      *

@@ -4,10 +4,15 @@ package com.yupi.springbootinit.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yupi.springbootinit.model.entity.Market;
 import com.yupi.springbootinit.model.vo.MarketVo;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.List;
 
 public interface PriceService extends IService<Market> {
+    @Scheduled
+    void ScheduledUpdateDate();
+
+    void sendMarketMessage(Market market);
     /**
      * 获取所有物品价格
      */
@@ -19,7 +24,6 @@ public interface PriceService extends IService<Market> {
     MarketVo getPriceByItemName(String itemName);
 
     // 1. 超级币
-    //    @Scheduled(cron = "0 0/10 * * * ?")
     void getSuperCurrency();
 
     /**
@@ -30,15 +34,13 @@ public interface PriceService extends IService<Market> {
     void getBase();
 
     // 1. 贝壳
-    //    @Scheduled(cron = "0 0/10 * * * ?")
+
     void getSeashell();
 
     // 4. 胖胖鹅
-    //    @Scheduled(cron = "0 0/10 * * * ?")
     void getPenguins();
 
     // 5. 龟蛋
-    //    @Scheduled(cron = "0 0/10 * * * ?")
     void getTurtleEggs();
 
     // 5. 龟仔
@@ -89,6 +91,5 @@ public interface PriceService extends IService<Market> {
     //20.灵石
     void getNimbusStone();
 
-    void sendMarketMessage(Market market);
-
+    void autoUpdateDate();
 }

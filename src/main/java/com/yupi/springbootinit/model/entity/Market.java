@@ -24,6 +24,7 @@ public class Market implements Serializable {
     private String currency;     // 货币单位（宝石/矿石）
     private Date createTime;
     private Date updateTime;
+    private Double remark;
     @TableLogic
     private Integer isDelete;
     @TableField(exist = false)

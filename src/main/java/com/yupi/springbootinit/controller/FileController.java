@@ -12,6 +12,7 @@ import com.yupi.springbootinit.model.entity.User;
 import com.yupi.springbootinit.model.enums.FileUploadBizEnum;
 import com.yupi.springbootinit.service.UserService;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -49,8 +50,10 @@ public class FileController {
      * @return
      */
     @PostMapping("/upload")
-    public BaseResponse<String> uploadFile(@RequestPart("file") MultipartFile multipartFile,
-            UploadFileRequest uploadFileRequest, HttpServletRequest request) {
+    public BaseResponse<String> uploadFile(
+            @RequestPart("file") MultipartFile multipartFile,
+            UploadFileRequest uploadFileRequest,
+            HttpServletRequest request) {
         String biz = uploadFileRequest.getBiz();
         FileUploadBizEnum fileUploadBizEnum = FileUploadBizEnum.getEnumByValue(biz);
         if (fileUploadBizEnum == null) {
@@ -58,32 +61,33 @@ public class FileController {
         }
         validFile(multipartFile, fileUploadBizEnum);
         User loginUser = userService.getLoginUser(request);
-        // 文件目录：根据业务、用户来划分
+        // 生成唯一文件名
         String uuid = RandomStringUtils.randomAlphanumeric(8);
         String filename = uuid + "-" + multipartFile.getOriginalFilename();
-        String filepath = String.format("/%s/%s/%s", fileUploadBizEnum.getValue(), loginUser.getId(), filename);
-        File file = null;
+        // 服务器存储路径（根据业务和用户划分）
+        String serverPath = String.format("/%s/%s/%s",
+                fileUploadBizEnum.getValue(),
+                loginUser.getId(),
+                filename);
+        // 服务器实际存储的绝对路径（替换成你的实际存储目录）
+        String uploadDir = "C:/yunchi/data/uploads";
+        File targetFile = new File(uploadDir + serverPath);
         try {
-            // 上传文件
-            file = File.createTempFile(filepath, null);
-            multipartFile.transferTo(file);
-            cosManager.putObject(filepath, file);
-            // 返回可访问地址
-            return ResultUtils.success(FileConstant.COS_HOST + filepath);
-        } catch (Exception e) {
-            log.error("file upload error, filepath = " + filepath, e);
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "上传失败");
-        } finally {
-            if (file != null) {
-                // 删除临时文件
-                boolean delete = file.delete();
-                if (!delete) {
-                    log.error("file delete error, filepath = {}", filepath);
-                }
+            // 创建父目录（如果不存在）
+            if (!targetFile.getParentFile().exists()) {
+                targetFile.getParentFile().mkdirs();
             }
+            // 保存文件到服务器
+            multipartFile.transferTo(targetFile);
+            // 返回可访问的URL（替换成你的公网IP或域名）
+            String fileUrl = "http://114.215.192.88/uploads" + serverPath;
+            return ResultUtils.success(fileUrl);
+
+        } catch (IOException e) {
+            log.error("文件上传失败: {}", serverPath, e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "上传失败");
         }
     }
-
     /**
      * 校验文件
      *

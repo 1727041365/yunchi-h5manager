@@ -1,30 +1,31 @@
 package com.yupi.springbootinit.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yupi.springbootinit.model.enums.MarketConfigEnum;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.http.parser.Host;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import org.apache.commons.codec.digest.DigestUtils;
 
-import java.util.HashMap;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.TimeZone;
 
 @Slf4j
 @Component
 public class ApiClient {
 
     private final RestTemplate restTemplate;
-//    private static final String TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIiLCJhdWQiOiIiLCJqdGkiOiIxMjQyMjQ1NyIsImlhdCI6MTc1MjExNTU1MCwibmJmIjoxNzUyMTE1NTUwLCJleHAiOjE3NTM5NTI5MjMsInR5cGUiOiIyMDk3NV92MTFhcHAiLCJhdXRoZW50aWNhdGlvblN0YXRlIjpmYWxzZX0.aVoPWd1th4W27pG1dFcugvFLngZ8zEkyRoy9JldZ-1I";
-//    private static final String ANDROID_ID = "12432b87b3b19b25";
     private static final String CHANNEL = "official";
     private static final String PACKAGE_ID = "com.caike.union";
     private static final String User_Agent= "com.caike.union/5.2.2-official Dalvik/2.1.0 (Linux; U; Android 9; SM-N9760 Build/PQ3B.190801.11071530";
-//    private static final String USER_ID= "12422457  5.2.2";
+    private static final String Stone_User_Agent= "com.ainimei.farmworld/2.1.2 (Linux; U; Android 12; zh-cn) (official; 201002)";
     public ApiClient(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
@@ -35,7 +36,7 @@ public class ApiClient {
     public <T> T postFormWithSign(
             String url,
             Map<String, String> urlParams, // URL参数（uid、version）
-            Map<String, String> formParams, // 表单请求体参数
+           Map<String,String>  formParams, // 表单请求体参数
             String SingResult,
             String ts,
             String version,
@@ -70,45 +71,127 @@ public class ApiClient {
             return null;
         }
     }
+    /**
+     * 发送表单POST请求
+     */
+    public <T> T postFormWithDetail(
+            String url,
+            Map<String, String> urlParams, // URL参数（uid、version）
+            Map<String, String> formParams, // 表单请求体参数
+            String version,
+            String Host,
+            Class<T> responseType
+    ) {
+        // 1. 构建完整URL（拼接URL参数）
+        String fullUrl = buildUrlWithParams(url, urlParams);
+        System.out.println("fullUrl:"+fullUrl);
+        // 5. 构建请求体（表单格式）
+        MultiValueMap<String, String> formData = convertToFormData(formParams);
+        log.info("表单数据formData:"+formData);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED); // 改成表单格式
+        headers.set("Host", Host);
+        headers.set("User-Agent", User_Agent);
+        headers.set("androidId", MarketConfigEnum.ANDROID_ID.getValue());
+        headers.set("channel", CHANNEL);
+        headers.set("packageId", PACKAGE_ID);
+        headers.set("token", MarketConfigEnum.TOKEN.getValue()); // 此处需填写实际 token
+        headers.set("userId", MarketConfigEnum.UID.getValue()); // 此处需填写实际用户 ID
+        headers.set("version", version);
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(formData, headers);
+        System.out.println(entity);
+        // 6. 发送请求并返回结果
+        try {
+            return restTemplate.postForEntity(fullUrl, entity, responseType).getBody();
+        } catch (Exception e) {
+            System.err.println("POST表单请求失败：" + fullUrl + "，错误：" + e.getMessage());
+            return null;
+        }
+    }
 
-//    /**
-//     * 发送JSON POST请求（带签名，适用于龟蛋、龟仔等接口）
-//     */
-//    public <T> T postJsonWithSign(
-//            String url,
-//            Map<String, String> urlParams, // URL参数（uid、version）
-//            Object jsonBody, // JSON请求体（如{"species":"0","page":1}）
-//            String version,
-//            Class<T> responseType
-//    ) {
-//        // 1. 构建完整URL
-//        String fullUrl = buildUrlWithParams(url, urlParams);
-//
-//        // 2. 构建请求头
-//        String ts = headers.getFirst("ts");
-//        String userId = urlParams.get("uid");
-//
-//        // 3. 合并参数（URL参数+JSON参数+固定参数）
-//        Map<String, String> allParams = new HashMap<>();
-//        allParams.putAll(urlParams);
-//        allParams.putAll(convertJsonToMap(jsonBody)); // JSON参数转为Map
-//        allParams.put("ts", ts);
-//        allParams.put("userId", userId);
-//        allParams.put("androidId", ANDROID_ID);
-//        allParams.put("channel", CHANNEL);
-//        allParams.put("packageId", PACKAGE_ID);
-//        allParams.put("token", TOKEN);
-//        headers.setContentType(MediaType.APPLICATION_JSON); // JSON格式
-//
-//        // 5. 发送请求
-//        HttpEntity<Object> entity = new HttpEntity<>(jsonBody, headers);
-//        try {
-//            return restTemplate.postForEntity(fullUrl, entity, responseType).getBody();
-//        } catch (Exception e) {
-//            System.err.println("POST JSON请求失败：" + fullUrl + "，错误：" + e.getMessage());
-//            return null;
-//        }
-//    }
+    public <T> T postFormWithStoneDetail(
+            String url,
+            Map<String, String> urlParams, // URL参数（uid、version）
+            Map<String, String> formParams, // 表单请求体参数
+            String Host,
+            Class<T> responseType
+    ) {
+        // 1. 构建完整URL（拼接URL参数）
+        String fullUrl = buildUrlWithParams(url, urlParams);
+        System.out.println("fullUrl:"+fullUrl);
+        // 5. 构建请求体（表单格式）
+        MultiValueMap<String, String> formData = convertToFormData(formParams);
+        log.info("表单数据formData:"+formData);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("ANDROIDID", MarketConfigEnum.ANDROID_ID.getValue());
+        headers.set("Channel", CHANNEL);
+        headers.set("Connection", "Keep-Alive");
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.set("Host", Host);
+        headers.set("User-Agent", "com.ainimei.farmworld/2.1.3 (Linux; U; Android 10; zh-cn) (official; 201003)");
+        headers.set("test-encrypt", "0");
+        headers.set("token", MarketConfigEnum.StoneTOKEN.getValue()); // 此处需填写实际 token
+        headers.set("uid", MarketConfigEnum.StoenUID.getValue()); // 此处需填写实际用户 ID
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(formData, headers);
+        System.out.println(entity);
+        // 6. 发送请求并返回结果
+        try {
+            return restTemplate.postForEntity(fullUrl, entity, responseType).getBody();
+        } catch (Exception e) {
+            System.err.println("POST表单请求失败：" + fullUrl + "，错误：" + e.getMessage());
+            return null;
+        }
+    }
+
+
+    public <T> T postJsonWithCaveHouseDetail(
+            String url,
+            Map<String, String> urlParams, // URL参数（uid、version）
+            Map<String, String> jsonParams, // JSON请求体参数
+            String Host,
+            String userId,
+            Class<T> responseType
+    ) {
+        // 1. 构建完整URL（拼接URL参数）
+        String fullUrl = buildUrlWithParams(url, urlParams);
+        System.out.println("fullUrl:" + fullUrl);
+
+        // 2. 构建JSON请求体
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonBody = "";
+        try {
+            jsonBody = objectMapper.writeValueAsString(jsonParams);
+        } catch (JsonProcessingException e) {
+            log.error("JSON序列化失败", e);
+            return null;
+        }
+        log.info("JSON请求体:" + jsonBody);
+
+        // 3. 设置请求头
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("ANDROIDID", MarketConfigEnum.ANDROID_ID.getValue());
+        headers.set("Channel", CHANNEL);
+        headers.set("Connection", "Keep-Alive");
+        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);// 设置为JSON类型
+        headers.set("Host", Host);
+        headers.set("User-Agent","com.ainimei.farmworld/2.1.2 (Linux; U; Android 12; zh-cn) (official; 201002)");
+        headers.set("test-encrypt", "0");
+        headers.set("token", MarketConfigEnum.StoneTOKEN.getValue());
+        headers.set("uid", MarketConfigEnum.StoenUID.getValue());
+        headers.set("x-role-id", userId);
+
+        // 4. 创建HTTP实体（注意这里使用String作为请求体类型）
+        HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+        log.info("请求实体:::" + entity);
+
+        // 5. 发送请求
+        try {
+            return restTemplate.postForEntity(fullUrl, entity, responseType).getBody();
+        } catch (Exception e) {
+            System.err.println("POST JSON请求失败：" + fullUrl + "，错误：" + e.getMessage());
+            return null;
+        }
+    }
 
     // 工具方法：拼接URL参数（如?uid=123&version=4.1.2）
     private String buildUrlWithParams(String url, Map<String, String> params) {
@@ -119,7 +202,6 @@ public class ApiClient {
         return sb.toString();
     }
 
-
     // 转换为表单数据
     private MultiValueMap<String, String> convertToFormData(Map<String, String> params) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
@@ -127,18 +209,5 @@ public class ApiClient {
             params.forEach((k, v) -> formData.add(k, v));
         }
         return formData;
-    }
-
-    // 将JSON对象转为Map（简化版，复杂对象需用Jackson）
-    private Map<String, String> convertJsonToMap(Object jsonBody) {
-        // 实际项目中使用Jackson的ObjectMapper转换
-        // 此处以龟蛋接口为例，手动转换（根据实际JSON结构调整）
-        if (jsonBody instanceof Map) {
-            Map<?, ?> map = (Map<?, ?>) jsonBody;
-            Map<String, String> result = new HashMap<>();
-            map.forEach((k, v) -> result.put(k.toString(), v.toString()));
-            return result;
-        }
-        return new HashMap<>();
     }
 }

@@ -114,3 +114,8 @@ app:
     queue: market-data-queue
     exchange: market-data-exchange
     routing-key: market-data
+    detailQueue: information-detail-queue
+    detailExchange: information-detail-exchange
+    detailRouting-key: information-detail
+file:
+  upload-dir: C:/data/hot/

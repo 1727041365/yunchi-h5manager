@@ -23,12 +23,15 @@ public class RequestStringGenerator {
                            "&packageId=com.caike.union" + 
                            "&version=" + version + 
                            "&channel=official";
-        
-        // 计算MD5
-        String md5 = calculateMD5(paramsPart3);
-        
-        // 构建完整请求字符串
-        return "post|" + requestUrl + "|" + paramsPart1 + "|" + ts + "|" + paramsPart2 + "|" + md5+","+ts;
+        if (paramsPart3 != null && !paramsPart3.isEmpty() ){
+            // 计算MD5
+            String md5 = calculateMD5(paramsPart3);
+            // 构建完整请求字符串
+            return "post|" + requestUrl + "|" + paramsPart1 + "|" + ts + "|" + paramsPart2 + "|" + md5+","+ts;
+        }else  {
+            return "post|" + requestUrl + "|" + paramsPart1 + "|" + ts + "|" + paramsPart2 + "|" + ","+ts;
+        }
+
     }
     private static String generateRandomAndroidId() {
         Random random = new Random();

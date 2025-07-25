@@ -28,7 +28,7 @@ public class Hot implements Serializable {
     /**
      * 头图
      */
-    private Text photo;
+    private String photoPath;  // 存储图片路径
     /**
      * 标题
      */

@@ -8,10 +8,13 @@ import com.yupi.springbootinit.common.ResultUtils;
 import com.yupi.springbootinit.exception.BusinessException;
 import com.yupi.springbootinit.model.entity.Hot;
 import com.yupi.springbootinit.service.HotService;
+import com.yupi.springbootinit.utils.SavePhotoUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -20,24 +23,32 @@ public class HotController {
 
     @Resource
     private HotService hotService;
-
-    // 新增热点
     @PostMapping("/add")
-    public BaseResponse<Long> addHot(@RequestBody Hot hot) {
-        if (hot == null) {
+    public BaseResponse<Long> addHot(@RequestParam("tittle") String tittle,
+                                     @RequestParam("content") String content
+            ,@RequestPart("photo") MultipartFile photo) {
+        if (tittle == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // 校验数据
-        String title = hot.getTitle();
-        if (StringUtils.isBlank(title)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "标题不能为空");
+        if (content == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        
-        boolean result = hotService.save(hot);
-        if (!result) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR);
+        try {
+            // 保存图片到文件系统
+            String photoPath = SavePhotoUtil.saveHotPhoto(photo);
+            // 创建实体
+            Hot hot = new Hot();
+            hot.setTitle(tittle);
+            hot.setContent(content);
+            hot.setPhotoPath(photoPath);
+            boolean result = hotService.save(hot);
+            if (!result) {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR);
+            }
+            return ResultUtils.success(hot.getId());
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "图片保存失败");
         }
-        return ResultUtils.success(hot.getId());
     }
 
     @PostMapping("/delete")
@@ -81,6 +92,7 @@ public class HotController {
         // 按创建时间降序排列
         queryWrapper.orderByDesc("create_time");
         List<Hot> hotList = hotService.list(queryWrapper);
+        System.out.println(hotList);
         return ResultUtils.success(hotList);
     }
 

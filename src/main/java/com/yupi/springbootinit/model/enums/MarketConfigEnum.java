@@ -6,7 +6,9 @@ public enum MarketConfigEnum {
     UID("12422457"),
     TOKEN("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIiLCJhdWQiOiIiLCJqdGkiOiIxMjQyMjQ1NyIsImlhdCI6MTc1MjExNTU1MCwibmJmIjoxNzUyMTE1NTUwLCJleHAiOjE3NTM5NTI5MjMsInR5cGUiOiIyMDk3NV92MTFhcHAiLCJhdXRoZW50aWNhdGlvblN0YXRlIjpmYWxzZX0.aVoPWd1th4W27pG1dFcugvFLngZ8zEkyRoy9JldZ-1I"),
     KEY("BHbE9oCgl58NUz5oJVDUFMLJO9vGQnvdv0Lem3315wQG8laB4dGcxIXFLfDsInHTa"),
-    ANDROID_ID(generateRandomAndroidId());
+    ANDROID_ID(generateRandomAndroidId()),
+    StoenUID("14323289"),
+    StoneTOKEN("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIiLCJhdWQiOiIiLCJqdGkiOiIxNDMyMzI4OSIsImlhdCI6MTc1MzA3Mjk3NiwibmJmIjoxNzUzMDcyOTc2LCJleHAiOjE3NTU2NjQ5NzYsInR5cGUiOiJ2OGFwcCIsImF1dGhlbnRpY2F0aW9uU3RhdGUiOnRydWV9.2RRkHSh5lJ-tESQ1J1zT8qpQNVk5thk43wmdNIgDIK4");
     private final String value;
 
     MarketConfigEnum(String value) {
