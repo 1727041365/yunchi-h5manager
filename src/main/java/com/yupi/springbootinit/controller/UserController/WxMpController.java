@@ -1,4 +1,4 @@
-package com.yupi.springbootinit.controller;
+package com.yupi.springbootinit.controller.UserController;
 
 import com.yupi.springbootinit.wxmp.WxMpConstant;
 import java.io.IOException;

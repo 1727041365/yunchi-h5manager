@@ -1,29 +1,18 @@
-package com.yupi.springbootinit.controller;
+package com.yupi.springbootinit.controller.PriceController;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.yupi.springbootinit.common.BaseResponse;
 import com.yupi.springbootinit.common.ErrorCode;
 import com.yupi.springbootinit.common.ResultUtils;
-import com.yupi.springbootinit.exception.ThrowUtils;
 import com.yupi.springbootinit.mapper.OtherMapper;
-import com.yupi.springbootinit.model.dto.file.UploadFileRequest;
-import com.yupi.springbootinit.model.entity.Market;
 import com.yupi.springbootinit.model.entity.OtherUser;
-import com.yupi.springbootinit.model.entity.User;
 import com.yupi.springbootinit.model.vo.MarketVo;
 import com.yupi.springbootinit.service.PriceService;
-import com.yupi.springbootinit.service.UserOtherService;
 import com.yupi.springbootinit.service.UserService;
-import com.yupi.springbootinit.utils.SavePhotoUtil;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import java.io.IOException;
-import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
 @RestController
 @RequestMapping("/prices")

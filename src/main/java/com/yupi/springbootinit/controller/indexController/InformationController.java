@@ -1,4 +1,4 @@
-package com.yupi.springbootinit.controller;
+package com.yupi.springbootinit.controller.indexController;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.yupi.springbootinit.common.BaseResponse;

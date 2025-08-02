@@ -26,7 +26,7 @@ public class SpiritMineDescriptionServiceImpl extends ServiceImpl<SpiritMineDesc
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @Async
+    @Async("longTaskThreadPool")
     @Scheduled(cron = "0 0/30 * * * ?")
     public void saveOrUpdateDetail() {
         String url1 = "https://farm-api.lucklyworld.com/v8/api/user/home";

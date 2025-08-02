@@ -1,4 +1,4 @@
-package com.yupi.springbootinit.controller;
+package com.yupi.springbootinit.controller.HotController;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

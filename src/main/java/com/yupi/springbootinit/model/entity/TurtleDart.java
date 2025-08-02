@@ -6,43 +6,33 @@ import lombok.Data;
 import java.io.Serializable;
 import java.util.Date;
 
-@TableName(value = "detail")
+/**
+ * 乌龟镖局实体类
+ */
 @Data
-public class InformationDetail implements Serializable {
+@TableName("turtle_dart")
+public class TurtleDart implements Serializable {
     /**
      * id
      */
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     /**
-     * informationId
+     * 乌龟等级
      */
-    private Long informationId;
-    private String name;
+    private String turtleLevel;
     /**
-     * 头图
+     * 乌龟数量
      */
-    private String photoPath;  // 存储图片路径
+    private Double turtleSize;
     /**
-     * 合成成功率
+     * 乌龟价格
      */
-    private String successRate;//合成成功率
+    private Double turtlePrice;
     /**
-     * 平均战力
+     * 乌龟倍数
      */
-    private String evaluateCombatPower;//平均战力
-    /**
-     * 日采矿数量
-     */
-    private String dailyRewardOre;
-    /**
-     * 月利润
-     */
-    private String monthlyProfit;
-    /**
-     * 合成预期
-     */
-    private String consolidatedExpectations;
+    private String turtleMultiple;
     /**
      * 创建时间
      */
@@ -52,7 +42,6 @@ public class InformationDetail implements Serializable {
      * 更新时间
      */
     private Date updateTime;
-
     /**
      * 是否删除
      */

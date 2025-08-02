@@ -1,13 +1,13 @@
-package com.yupi.springbootinit.controller;
+package com.yupi.springbootinit.controller.indexController;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.yupi.springbootinit.common.BaseResponse;
 import com.yupi.springbootinit.common.ErrorCode;
 import com.yupi.springbootinit.common.ResultUtils;
 import com.yupi.springbootinit.exception.ThrowUtils;
-import com.yupi.springbootinit.model.entity.Information;
 import com.yupi.springbootinit.model.entity.InformationDetail;
 import com.yupi.springbootinit.model.entity.SpiritMineDescription;
 import com.yupi.springbootinit.model.entity.SpiritStoneUserDetail;
@@ -15,19 +15,19 @@ import com.yupi.springbootinit.model.vo.SpiritMineDescriptionVo;
 import com.yupi.springbootinit.model.vo.StoenDetailVo;
 import com.yupi.springbootinit.model.vo.StoneQuantityDetailVo;
 import com.yupi.springbootinit.service.InformationDetailService;
+import com.yupi.springbootinit.service.PriceService;
 import com.yupi.springbootinit.service.SpiritMineDescriptionService;
 import com.yupi.springbootinit.service.SpiritStoneUserDetailService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.text.ParseException;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
@@ -43,12 +43,14 @@ public class InformationDetailController {
     private SpiritStoneUserDetailService spiritStoneUserDetailService;
     @Resource
     private SpiritMineDescriptionService spiritMineDescriptionService;
+    @Autowired
+    private PriceService priceService;
+
     @GetMapping("/detail")
     public BaseResponse<List<InformationDetail>> getInformationList(@RequestParam("id") Long informationId) {
         List<InformationDetail> list = informationDetailService.getDetail(informationId);
         return ResultUtils.success(list);
     }
-
     @GetMapping("/save")
     public BaseResponse<Boolean> saveInformationList() {
         Boolean b = informationDetailService.addImmortal();
@@ -130,6 +132,60 @@ public class InformationDetailController {
     @GetMapping("/addMineDescrip")
     public BaseResponse<String> addMineDescrip() {
         spiritMineDescriptionService.saveOrUpdateDetail();
+        return ResultUtils.success("初始化成功");
+    }
+    @GetMapping("/addMineDescrip1")
+    public BaseResponse<String> addMineDescrip1() {
+        spiritStoneUserDetailService.addOrUpdateDeta();
+        return ResultUtils.success("初始化成功");
+    }
+
+    @GetMapping("/test")
+    public BaseResponse<String> test() throws JsonProcessingException {
+//      priceService.getSuperCurrency();
+        try {
+            Thread.sleep(1000+new Random().nextInt(200)); // 线程暂停 1000毫秒（即 1 秒）
+//            priceService.getAirDrop();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            // 当线程在睡眠时被中断，会抛出此异常
+        }
+//        try {
+//            priceService.getAuspiciousStarTalisman();
+//            Thread.sleep(1000+new Random().nextInt(200)); // 线程暂停 1000毫秒（即 1 秒）
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//            // 当线程在睡眠时被中断，会抛出此异常
+//        }
+//        try {
+//            priceService.getImmortalSpecies();
+//            Thread.sleep(1000+new Random().nextInt(200)); // 线程暂停 1000毫秒（即 1 秒）
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//            // 当线程在睡眠时被中断，会抛出此异常
+//        }
+//        try {
+//            priceService.getCreationFruit();//造化果
+//            Thread.sleep(1000+new Random().nextInt(200)); // 线程暂停 1000毫秒（即 1 秒）
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//            // 当线程在睡眠时被中断，会抛出此异常
+//        }
+//        try {
+//            priceService.getMeritStonePackage() ; //29功德石包
+//            Thread.sleep(1000+new Random().nextInt(200)); // 线程暂停 1000毫秒（即 1 秒）
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//            // 当线程在睡眠时被中断，会抛出此异常
+//        }
+//        try {
+//            priceService.getGinseng();//30人参
+//            Thread.sleep(1000+new Random().nextInt(200)); // 线程暂停 1000毫秒（即 1 秒）
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//            // 当线程在睡眠时被中断，会抛出此异常
+//        }
+//        priceService.getRwVirtualStocks();//31仙侠宇宙虚拟股
         return ResultUtils.success("初始化成功");
     }
 }

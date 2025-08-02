@@ -118,6 +118,54 @@ CREATE TABLE `spirit_mine_description` (
                                            PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='灵矿说明表';
 
+CREATE TABLE `armor_work_shop` (
+                                                                                            `id` bigint(20) NOT NULL COMMENT 'id',
+                                                                                            `daily_totalr` double DEFAULT NULL COMMENT '护甲产出总量',
+                                                                                            `won_armor` double DEFAULT NULL COMMENT '摇中护甲',
+                                                                                            `cost_per_share` double DEFAULT NULL COMMENT '投入每份需要消费矿石',
+                                                                                            `monthly_profit` double DEFAULT NULL COMMENT '月利润',
+                                                                                            `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                                                                            `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                                                                            `is_delete` tinyint(1) DEFAULT 0 COMMENT '是否删除(0-未删除,1-已删除)',
+                                                                                            PRIMARY KEY (`id`),
+                                                                                            KEY `idx_create_time` (`create_time`)
+                                                         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='护甲坊';
+
+CREATE TABLE `ore_pledge` (
+                              `id` bigint(20) NOT NULL COMMENT '主键ID',
+                              `today_total_ore` double DEFAULT NULL COMMENT '今日产出总量',
+                              `everyday_ore` double DEFAULT NULL COMMENT '每日矿石资源总量',
+                              `yesterday_total_ore` double DEFAULT NULL COMMENT '较昨日',
+                              `weekday_total_ore` double DEFAULT NULL COMMENT '较七日前',
+                              `monthday_total_ore` double DEFAULT NULL COMMENT '较30日前',
+                              `user_use_ore` double DEFAULT NULL COMMENT '玩家持有矿石总量',
+                              `user_yesterday_ore` double DEFAULT NULL COMMENT '玩家持有量较昨日变化',
+                              `immortal_hall_ore` double DEFAULT NULL COMMENT '神仙殿持有矿石总量',
+                              `immortal_yesterday_ore` double DEFAULT NULL COMMENT '神仙殿持有量较昨日变化',
+                              `salary_pool_ore` double DEFAULT NULL COMMENT '工资池持有矿石总量',
+                              `salary_pool_yesterday_ore` double DEFAULT NULL COMMENT '工资池持有量较昨日变化',
+                              `other_ore` double DEFAULT NULL COMMENT '其他矿石总量',
+                              `other_yesterday_ore` double DEFAULT NULL COMMENT '其他矿石较昨日变化',
+                              `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                              `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                              `is_delete` tinyint(1) DEFAULT '0' COMMENT '逻辑删除(0-未删除,1-已删除)',
+                              PRIMARY KEY (`id`),
+                              KEY `idx_create_time` (`create_time`) COMMENT '创建时间索引，用于按时间查询',
+                              KEY `idx_is_delete` (`is_delete`) COMMENT '逻辑删除索引，优化查询效率'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='矿石质押表';
+//乌龟表
+CREATE TABLE `turtle_dart` (
+                               `id` bigint NOT NULL COMMENT 'id',
+                               `turtle_level` varchar(255) DEFAULT NULL COMMENT '乌龟等级',
+                               `turtle_size` double DEFAULT NULL COMMENT '乌龟数量',
+                               `turtle_price` double DEFAULT NULL COMMENT '乌龟价格',
+                               `turtle_multiple` varchar(255) DEFAULT NULL COMMENT '乌龟倍数',
+                               `create_time` datetime datetime DEFAULT null comment '创建时间',
+                               `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+                               `is_delete` int DEFAULT NULL COMMENT '是否删除(0-未删除,1-已删除)',
+                               PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='乌龟镖局表';
+
 -- 热点点赞表（硬删除）
 create table if not exists post_thumb
 (

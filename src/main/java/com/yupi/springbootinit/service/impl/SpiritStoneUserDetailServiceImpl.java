@@ -52,11 +52,11 @@ public class SpiritStoneUserDetailServiceImpl extends ServiceImpl<SpiritStoneUse
         return null;
     }
     @Override
-    @Async
+    @Async("longTaskThreadPool")
     @Scheduled(cron = "0 0/30 * * * ?")
     public CompletableFuture<Boolean> addOrUpdateDeta() {
         try {
-            Long id = informationService.getOne(Wrappers.lambdaQuery(Information.class).eq(Information::getTitle, "仙侠宇宙灵石板块")).getId();
+//            Long id = informationService.getOne(Wrappers.lambdaQuery(Information.class).eq(Information::getTitle, "仙侠宇宙灵石板块")).getId();
             Map<String, String> urlParam = new HashMap<>();
             urlParam.put("uid", "");
             urlParam.put("version", "2.1.3");
@@ -89,37 +89,57 @@ public class SpiritStoneUserDetailServiceImpl extends ServiceImpl<SpiritStoneUse
             // 处理StoneUserDetail数据：批量存在则更新，不存在则保存
             boolean b1 = batchUpsertStoneUserDetails(stoneUserDetails);
             List<SpiritStoneUserDetail> spiritStoneUserDetails = new ArrayList<>();//所有矿主列表
+            log.info("洞主数量={}", stoneUserDetails);
             stoneUserDetails.stream().forEach(item -> {
                 Long roomId = item.getId();
-                formParam.put("next", "");
-                formParam.put("roomId", String.valueOf(roomId));
-                formParam.put("sortRule", "2");
-                formParam.put("sortColumn", "2");
-                urlParam.put("uid", MarketConfigEnum.StoenUID.getValue());
-                urlParam.put("version", "2.1.2");
-                Map<String, List<Map<String, Object>>> response = apiClient.postJsonWithCaveHouseDetail("https://farm-api.lucklyworld.com/v8/api/game/room/union/member", urlParam, formParam, "farm-api.lucklyworld.com", String.valueOf(roomId), Map.class);
-                log.info("response={}", response);
-                List<Map<String, Object>> items = response.get("items");
-                items.forEach(itemStone -> {
-                    BigInteger ore = new BigInteger(String.valueOf(itemStone.get("ore")));
-                    if (ore.compareTo(BigInteger.ZERO) > 0) {
-                        SpiritStoneUserDetail spiritStoneUserDetail = new SpiritStoneUserDetail();
-                        spiritStoneUserDetail.setStoneTotal(ore);
-                        spiritStoneUserDetail.setStoneLevel(String.valueOf(SpiritStoneLevelUtils.getStoneLevel(ore)));
-                        spiritStoneUserDetail.setName((String) itemStone.get("nickname"));
-                        spiritStoneUserDetail.setId(Long.valueOf(String.valueOf(itemStone.get("roleId"))));
-                        spiritStoneUserDetail.setRoomId(roomId);
-                        spiritStoneUserDetails.add(spiritStoneUserDetail);
+                int next = 1; // 初始化next参数
+                boolean hasMoreData = true; // 标记是否还有更多数据
+                while (hasMoreData) {
+                    formParam.put("next", String.valueOf(next)); // 设置当前next值
+                    formParam.put("roomId", String.valueOf(roomId));
+                    formParam.put("sortRule", "2");
+                    formParam.put("sortColumn", "2");
+                    urlParam.put("uid", MarketConfigEnum.StoenUID.getValue());
+                    urlParam.put("version", "2.1.2");
+                    Map<String, List<Map<String, Object>>> response = apiClient.postJsonWithCaveHouseDetail(
+                            "https://farm-api.lucklyworld.com/v8/api/game/room/union/member",
+                            urlParam,
+                            formParam,
+                            "farm-api.lucklyworld.com",
+                            String.valueOf(roomId),
+                            Map.class
+                    );
+                    log.info("response={}", response);
+                    // 检查响应是否为空或items列表为空
+                    if (response == null || !response.containsKey("items") || response.get("items").isEmpty()) {
+                        hasMoreData = false; // 没有更多数据，退出循环
+                    } else {
+                        List<Map<String, Object>> items = response.get("items");
+                        log.info("每个洞主的矿数量={}", items.size());
+                        items.forEach(itemStone -> {
+                            BigInteger ore = new BigInteger(String.valueOf(itemStone.get("ore")));
+                            if (ore.compareTo(BigInteger.ZERO) > 0) {
+                            SpiritStoneUserDetail spiritStoneUserDetail = new SpiritStoneUserDetail();
+                            spiritStoneUserDetail.setStoneTotal(ore);
+                            spiritStoneUserDetail.setStoneLevel(String.valueOf(SpiritStoneLevelUtils.getStoneLevel(ore)));
+                            spiritStoneUserDetail.setName((String) itemStone.get("nickname"));
+                            spiritStoneUserDetail.setId(Long.valueOf(String.valueOf(itemStone.get("roleId"))));
+                            spiritStoneUserDetail.setRoomId(roomId);
+                            spiritStoneUserDetails.add(spiritStoneUserDetail);
+                            }
+                        });
+                        next++; // 增加next值，准备获取下一页数据
                     }
-                });
-                try {
-                    Thread.sleep( new Random().nextInt(200));
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    try {
+                        Thread.sleep(new Random().nextInt(200));
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             });
             // 处理SpiritStoneUserDetail数据：批量存在则更新，不存在则保存
             boolean b = batchUpsertSpiritStoneUserDetails(spiritStoneUserDetails);
+            log.info("洞主 {} 处理完成，累计矿主数量: {}", spiritStoneUserDetails.size());
             getTotalStone(spiritStoneUserDetails);
             return CompletableFuture.completedFuture(b1 && b);
         } catch (Exception e) {
@@ -233,6 +253,7 @@ public class SpiritStoneUserDetailServiceImpl extends ServiceImpl<SpiritStoneUse
                        && stoneTotal.compareTo(twoThousandTwoHundredNinety) >= 0)// >=2290万
                .reduce(BigInteger.ZERO, BigInteger::add);
        List<StoneStatistics> list = stoneStatisticsMapper.selectList(Wrappers.lambdaQuery(StoneStatistics.class));
+       log.info("list:",list);
        String size = String.valueOf(details.size());
        if (list != null && list.size() > 0) {
             StoneStatistics stoneStatistics = list.get(0);
@@ -247,6 +268,7 @@ public class SpiritStoneUserDetailServiceImpl extends ServiceImpl<SpiritStoneUse
             stoneStatistics.setEightTotal(total790To1290);
             stoneStatistics.setNineTotal(totalOver2290);
             stoneStatistics.setTenTotal(totalmax2290);
+           log.info("全部矿洞数量：："+size);
             stoneStatistics.setUserQuantity(size);
             stoneStatistics.setUpdateTime(new Date());
             stoneStatisticsMapper.updateById(stoneStatistics);
@@ -263,6 +285,7 @@ public class SpiritStoneUserDetailServiceImpl extends ServiceImpl<SpiritStoneUse
             stoneStatistics.setEightTotal(total790To1290);
             stoneStatistics.setNineTotal(totalOver2290);
             stoneStatistics.setTenTotal(totalmax2290);
+           log.info("全部矿洞数量：："+size);
             stoneStatistics.setUserQuantity(size);
             stoneStatistics.setUpdateTime(new Date());
             stoneStatisticsMapper.insert(stoneStatistics);

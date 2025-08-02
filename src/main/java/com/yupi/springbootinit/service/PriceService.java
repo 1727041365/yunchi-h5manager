@@ -12,6 +12,9 @@ public interface PriceService extends IService<Market> {
     @Scheduled
     void ScheduledUpdateDate();
 
+    @Scheduled(cron = "0 0/10 * * * ?")
+    void RwScheduledUpdateDate();
+
     void sendMarketMessage(Market market);
     /**
      * 获取所有物品价格
@@ -90,6 +93,39 @@ public interface PriceService extends IService<Market> {
 
     //20.灵石
     void getNimbusStone();
+
+    //笔画接口
+    void getStroke();
+
+    //笔画接口
+    void getOre();
+
+    //24静心丸
+    void getJingxinPills();
+
+    //25完璧符
+    void getPerfectTalisman();
+
+    //26吉星符
+    void getAuspiciousStarTalisman();
+
+    //27造化果
+    void getCreationFruit();
+
+    //29功德石包
+    void getMeritStonePackage();
+
+    //30人参
+    void getGinseng();
+
+    //27仙种
+    void getImmortalSpecies();
+
+    //31仙侠宇宙虚拟股
+    void getRwVirtualStocks();
+
+    //31仙侠宇宙虚拟股
+    void getAirDrop();
 
     void autoUpdateDate();
 }

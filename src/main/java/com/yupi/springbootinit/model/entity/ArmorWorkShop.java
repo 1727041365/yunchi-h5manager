@@ -6,43 +6,34 @@ import lombok.Data;
 import java.io.Serializable;
 import java.util.Date;
 
-@TableName(value = "detail")
+/**
+ * 护甲坊实体类
+ */
 @Data
-public class InformationDetail implements Serializable {
+@TableName("armor_work_shop")
+public class ArmorWorkShop implements Serializable {
     /**
      * id
      */
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     /**
-     * informationId
+     * 护甲产出总量
      */
-    private Long informationId;
-    private String name;
+    private Double dailyTotalr;
     /**
-     * 头图
+     * 摇中护甲
      */
-    private String photoPath;  // 存储图片路径
+    private Double wonArmor;
     /**
-     * 合成成功率
+     * 投入每份需要消费矿石
      */
-    private String successRate;//合成成功率
-    /**
-     * 平均战力
-     */
-    private String evaluateCombatPower;//平均战力
-    /**
-     * 日采矿数量
-     */
-    private String dailyRewardOre;
+    private Double costPerShare;
     /**
      * 月利润
      */
-    private String monthlyProfit;
-    /**
-     * 合成预期
-     */
-    private String consolidatedExpectations;
+    private Double monthlyProfit;
+
     /**
      * 创建时间
      */

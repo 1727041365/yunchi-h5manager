@@ -1,4 +1,4 @@
-package com.yupi.springbootinit.controller;
+package com.yupi.springbootinit.controller.UserController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yupi.springbootinit.annotation.AuthCheck;
