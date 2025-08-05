@@ -413,7 +413,7 @@ public class PriceServiceImpl extends ServiceImpl<MarketMapper, Market> implemen
 
         }
         market.setItemName("护甲");
-        market.setCurrency("宝石");
+        market.setCurrency("矿石");
         MarketVo marketVo = new MarketVo();
         BeanUtils.copyProperties(market, marketVo);
         sendMarketMessage(market);

@@ -11,7 +11,7 @@ import java.util.Date;
 @Data
 public class TurtleDartVo implements Serializable {
     /**
-     * 乌龟等级
+     * 等级
      */
     private String turtleLevel;
     /**

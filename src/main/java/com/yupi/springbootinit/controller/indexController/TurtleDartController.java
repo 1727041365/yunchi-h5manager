@@ -8,7 +8,6 @@ import com.yupi.springbootinit.model.entity.TurtleDart;
 import com.yupi.springbootinit.model.vo.TurtleDartVo;
 import com.yupi.springbootinit.service.TurtleDartService;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.client.Response;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

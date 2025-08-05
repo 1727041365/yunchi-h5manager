@@ -360,8 +360,8 @@ public class InformationDetailServiceImpl extends ServiceImpl<InformationDetailM
     }
 
 // 获取护甲坊的平均战力,日采矿数量,合成成功率
-//    @Scheduled(fixedRate = 1000 * 60 )
-    @Scheduled(cron = "0 0/15 * * * ?")
+    @Scheduled(fixedRate = 1000 * 60 )
+//    @Scheduled(cron = "0 0/15 * * * ?")
     @Async("rwThreadPool")
     @Transactional(rollbackFor = Exception.class)
     public BaseResponse<String> getArmorWorkshop() throws JsonProcessingException, InterruptedException {

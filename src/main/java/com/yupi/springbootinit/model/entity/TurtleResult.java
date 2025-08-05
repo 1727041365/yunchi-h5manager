@@ -18,6 +18,7 @@ public class TurtleResult implements Serializable {
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     private String timeLimit;//期数
+    private String side;//地区序号
     private String regionName;//被打劫的地区名字
     /**
      * 创建时间

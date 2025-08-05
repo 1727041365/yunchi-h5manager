@@ -75,7 +75,7 @@ public class TurtleDartServiceImpl extends ServiceImpl<TurtleDartMapper, TurtleD
         formParams.put("type", "1");
         formParams.put("id", "443032");
         String version = "5.2.3";
-        List<Map<String, Object>> list = getMapsRw(requestUrl, version, paramsPart3, url, formParams);
+        List<Map<String, Object>> list =  getMapsCn(requestUrl, version, paramsPart3, url, formParams);
         Map<String, Object> item = list.get(0);
 
     }
@@ -86,7 +86,7 @@ public class TurtleDartServiceImpl extends ServiceImpl<TurtleDartMapper, TurtleD
         return localDate1.isEqual(localDate2);
     }
 
-    private List<Map<String, Object>> getMapsRw(String requestUrl, String version, String paramsPart3, String url, Map<String, String> formParams) throws JsonProcessingException {
+    private List<Map<String, Object>> getMapsCn(String requestUrl, String version, String paramsPart3, String url, Map<String, String> formParams) throws JsonProcessingException {
         RequestStringGenerator requestStringGenerator = new RequestStringGenerator();
         String code = requestStringGenerator.generateRequestString(requestUrl, MarketConfigEnum.UID.getValue(), version, MarketConfigEnum.TOKEN.getValue(), paramsPart3);
         String[] split = code.split(",");
